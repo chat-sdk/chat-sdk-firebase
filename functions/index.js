@@ -12,7 +12,7 @@ admin.initializeApp();
 
 const Sound = "default";
 const iOSAction = "co.chatsdk.QuickReply";
-const blockedUsersEnabled = true;
+const blockedUsersEnabled = false;
 
 function buildMessage (title, theBody, clickAction, sound, type, senderId, threadId, recipientId) {
     // Make the token payload
@@ -123,7 +123,7 @@ function isBlocked (usersRef, recipientId, testId) {
     if (blockedUsersEnabled) {
         return usersRef.child(recipientId).child('blocked').child(testId).once('value').then((blocked) => {
             let blockedValue = blocked.val();
-            logData("recipient: " + recipientId + ", testId"+ testId + "val: " + blockedValue);
+            // logData("recipient: " + recipientId + ", testId"+ testId + "val: " + blockedValue);
             return blockedValue !== null;
         });
     } else {
@@ -136,7 +136,7 @@ function getBlockedUsers (usersRef, userId) {
         return usersRef.child(userId).child('blocked').once('value').then((blocked) => {
             let blockedValue = blocked.val();
 
-            logData("usersRef " + usersRef.toString() + " uid: " + userId + ", val: " + blockedValue);
+            // logData("usersRef " + usersRef.toString() + " uid: " + userId + ", val: " + blockedValue);
 
             if (blockedValue !== null) {
                 return blockedValue;

@@ -20,12 +20,19 @@ Below is a summary of the steps that are required to setup push using the Fireba
 6. Choose `JavaScript`
 7. Choose `y` for ESLint
 8. Choose `Y` to install node dependencies
-9. Find the `functions` directory you've just created and copy the `index.js` file from [Github](https://github.com/chat-sdk/chat-sdk-android/tree/master/FirebasePushNotifications) into the directory
-10. Run `firebase deploy` 
+9. Find the `functions` directory you've just created and add the files: `index.js` and `package.json` from [Github](https://github.com/chat-sdk/chat-sdk-firebase/tree/master/functions) 
+11. If you are using the user blocking module ensure that the variable in the script `blockedUsersEnabled` is set to `true` 
+12. Run `firebase deploy` 
 
 Now the script is active and push notifications will be set out automatically. 
 
 #### Deploy the Firebase rules
+
+Firebase secures your data by allowing you to write rules to govern who can access the database and what can be written. On the Firebase dashboard click **Database** then the **Rules** tab. 
+
+Copy the contents of the [**rules.json**](https://github.com/chat-sdk/chat-sdk-firebase/blob/master/chat-sdk-rules.json) file into the rules and click publish.
+
+**OR**
 
 Update your `firebase.json` file as follows:
 
@@ -42,6 +49,10 @@ firebase deploy --only database:rules
 ```
   
 #### Deploy the storage rules
+
+Make sure storage is enabled for your project. On the Firebase dashboard click **Storage** and follow the instructions to enable storage. 
+
+The storage rules are needed to enable image storage and upload for image messages and user profiles. 
 
 Update your `firebase.json` file as follows:
 
