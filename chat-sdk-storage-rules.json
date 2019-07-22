@@ -1,0 +1,7 @@
+service firebase.storage {
+  match /b/chat-sdk-v4.appspot.com/o {
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
