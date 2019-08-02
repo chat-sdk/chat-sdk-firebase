@@ -8,13 +8,27 @@ const logging = new Logging();
 const log = logging.log('my-custom-log-name');
 
 
+
 admin.initializeApp();
 
 const Sound = "default";
 const iOSAction = "co.chatsdk.QuickReply";
-const blockedUsersEnabled = false;
+const blockedUsersEnabled = true;
+const loggingEnabled = false;
+const reciprocalContactsEnabled = false;
 
-function buildMessage (title, theBody, clickAction, sound, type, senderId, threadId, recipientId) {
+function buildContactPushMessage (title, theBody, clickAction, sound, senderId, recipientId) {
+
+    let data = {
+        chat_sdk_contact_entity_id: senderId,
+    };
+
+    return buildMessage(title, theBody, clickAction, sound, data, recipientId);
+
+}
+
+function buildMessagePushMessage (title, theBody, clickAction, sound, type, senderId, threadId, recipientId) {
+
     // Make the token payload
     let body = theBody;
 
@@ -48,6 +62,12 @@ function buildMessage (title, theBody, clickAction, sound, type, senderId, threa
         chat_sdk_push_body: body,
     };
 
+    return buildMessage(title, body, clickAction, sound, data, recipientId);
+
+}
+
+function buildMessage (title, body, clickAction, sound, data, recipientId) {
+
     // Make the user ID safe
     recipientId = recipientId.split(".").join("1");
     recipientId = recipientId.split("%2E").join("1");
@@ -79,8 +99,10 @@ function buildMessage (title, theBody, clickAction, sound, type, senderId, threa
 }
 
 function logData (data) {
-    const entry = log.entry({}, data);
-    log.write(entry);
+    if (loggingEnabled) {
+        const entry = log.entry({}, data);
+        log.write(entry);
+    }
 }
 
 function getUserName(usersRef, userId) {
@@ -109,6 +131,10 @@ function getUserIds (threadRef, senderId) {
     });
 }
 
+function unORNull(object) {
+    return object === 'undefined' || object === null || !object;
+}
+
 function getUserMeta (usersRef, userId) {
     return usersRef.child(userId).child('meta').once('value').then((meta) => {
         let metaValue = meta.val();
@@ -123,7 +149,7 @@ function isBlocked (usersRef, recipientId, testId) {
     if (blockedUsersEnabled) {
         return usersRef.child(recipientId).child('blocked').child(testId).once('value').then((blocked) => {
             let blockedValue = blocked.val();
-            // logData("recipient: " + recipientId + ", testId"+ testId + "val: " + blockedValue);
+            logData("recipient: " + recipientId + ", testId: "+ testId + "val: " + JSON.stringify(blockedValue) + ", send push: " + blockedValue === null);
             return blockedValue !== null;
         });
     } else {
@@ -148,12 +174,11 @@ function getBlockedUsers (usersRef, userId) {
     }
 }
 
-
 function getUserNameFromMeta (metaValue) {
     if (metaValue !== null) {
         let name = metaValue["name"];
-        if(!name || name === "undefined" || name === null) {
-            name = "No Name";
+        if(unORNull(name)) {
+            name = "Unknown";
         }
         return name;
     }
@@ -180,15 +205,15 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
 
     let userIds = data.userIds;
 
-    if(senderId === "undefined" || !senderId || senderId === null) {
+    if(unORNull(senderId)) {
         throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
     }
 
-    if(threadId === "undefined" || !threadId || threadId === null) {
+    if(unORNull(threadId)) {
         throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
     }
 
-    if(body === "undefined" || !body || body === null) {
+    if(unORNull(body)) {
         throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
     }
 
@@ -206,6 +231,34 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     return status;
 
 });
+
+if (reciprocalContactsEnabled) {
+    exports.contactListener = functions.database.ref('{rootPath}/users/{userId}/contacts/{contactId}').onCreate((contactSnapshot, context) => {
+
+        const contactVal = contactSnapshot.val();
+        const userId = context.params.userId;
+        const contactId = context.params.contactId;
+        const rootPath = context.params.rootPath;
+
+        if (!unORNull(userId) && !unORNull(contactId)) {
+
+            const ref = admin.database().ref(rootPath).child("users").child(contactId).child("contacts").child(userId);
+            const usersRef = admin.database().ref(rootPath).child("users");
+
+            return ref.set({type: 0}).then(() => {
+                return getUserName(usersRef, userId).then(name => {
+                    let message = buildContactPushMessage(name, "Added you as a contact", iOSAction, Sound, userId, contactId);
+                    return admin.messaging().send(message).then(success => {
+                        return success;
+                    }).catch(error => {
+                        console.log(error.message);
+                    });
+                });
+            });
+        }
+
+    });
+}
 
 exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/messages/{messageId}').onCreate((messageSnapshot, context) => {
 
@@ -231,12 +284,15 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
                 promises.push(isBlocked(usersRef, userId, senderId).then(isBlocked => {
                     if (!isBlocked) {
                         let messageText = messageValue["json_v2"]["text"];
-                        let message = buildMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId);
+                        let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId);
+                        logData("Send push: " + messageText + ", to: " + userId);
                         admin.messaging().send(message).then(success => {
                             return success;
                         }).catch(error => {
                             console.log(error.message);
                         });
+                    } else {
+                        logData("push blocked to: " + userId);
                     }
                     return 0;
                 }));

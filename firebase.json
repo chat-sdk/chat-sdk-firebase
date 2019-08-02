@@ -2,13 +2,21 @@
   "functions": {
     "predeploy": [
       "npm --prefix \"$RESOURCE_DIR\" run lint"
-    ]
+    ],
+    "source": "functions"
   },
   "database": {
-	  "rules": "chat-sdk-rules.json"
+    "rules": "chat-sdk-rules.json"
   },
   "storage": {
-	  "rules": "chat-sdk-storage-rules.json"
+    "rules": "chat-sdk-storage-rules.json"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
   }
 }
-

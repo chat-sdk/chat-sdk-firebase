@@ -68,3 +68,5 @@ node_modules/
 *.firebaserc
 package-lock.json
 node_modules/
+
+functions/src/
