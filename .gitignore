@@ -70,3 +70,4 @@ package-lock.json
 node_modules/
 
 functions/src/
+public

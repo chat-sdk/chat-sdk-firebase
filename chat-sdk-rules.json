@@ -1,8 +1,8 @@
 {
   "rules": {
         
-     //".read": "auth != null",
-     //".write": "auth != null",
+     // ".read": "true",
+     // ".write": "true",
     
     "$root": {
       
@@ -214,6 +214,9 @@
                 "$user_id": {
                   ".write": "auth.uid == $user_id && root.child($root+'/threads/'+$thread_id+'/users/'+auth.uid).exists()",
                   "status": {
+                  },
+                  "date": {
+                    ".validate": "newData.val() == now"
                   }
                 }
               }
@@ -271,7 +274,7 @@
         
        ".indexOn": ["meta/name", "meta/phone", "meta/email", "meta/location", "meta/country-code, meta/username"],
             // ".read": "true",
-          ".read": "data.child(auth.uid).exists()",
+          ".read": "auth.uid != null",
          
           "$user_id": {
 
