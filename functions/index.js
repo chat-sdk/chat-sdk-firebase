@@ -120,8 +120,13 @@ function getUserIds (threadRef, senderId) {
         if (usersVal !== null) {
             for (let userID in usersVal) {
                 if (usersVal.hasOwnProperty(userID)) {
-                    if (userID !== senderId) {
+                    logData("UsersVal:" + usersVal);
+                    let muted = usersVal[userID]["mute"];
+                    logData("Muted:" + muted);
+                    if (userID !== senderId && muted !== true) {
                         IDs.push(userID);
+                    } else {
+                        logData("Pushes muted for:" + userID);
                     }
                 }
             }
