@@ -15,6 +15,11 @@
           ".validate": "newData.val() == now"
         }
       },
+        
+      "config": {
+          ".read": "auth != null",
+          ".write": "false",
+      },
 
       // Clients can put themself online but they must write a time with value set to now
       // Any client can read the client list
