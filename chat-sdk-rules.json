@@ -6,6 +6,7 @@
     
     "$root": {
       
+        
       // Clients can write a time value indexed by their user ID
       // The time must be now
       "time": {
@@ -44,8 +45,8 @@
            "$message_id": {
 
              // The user who flagged the message can read and write
-              ".read": "!data.exists() || (data.child('creator-entity-id').val() == auth.uid)",
-              ".write":"!data.exists() || (data.child('creator-entity-id').val() == auth.uid)",
+              ".read": "!data.exists() || (data.child('creator-entity-id').val() == auth.uid) || (data.child('creator').val() == auth.uid)",
+              ".write":"!data.exists() || (data.child('creator-entity-id').val() == auth.uid) || (data.child('creator').val() == auth.uid)",
 
              // The message and thread must exist
               ".validate": "root.child($root + '/threads/' +newData.child('thread').val() +  '/messages/' + $message_id).exists()",
@@ -74,11 +75,13 @@
       "public-threads": {
         
         ".read": "auth != null",
+        ".indexOn": "creation-date",
         
         "$thread_id": {
 
+
           // Only the creator could delete a public chat room
-          ".write":"root.child($root+'/users/'+auth.uid).exists() && (!data.exists() || root.child($root + '/threads/' + $thread_id + '/details/creator-entity-id').val() == auth.uid)",
+          ".write":"root.child($root+'/users/'+auth.uid).exists() && (!data.exists() || root.child($root + '/threads/' + $thread_id + '/details/creator-entity-id').val() == auth.uid || root.child($root + '/threads/' + $thread_id + '/meta/creator').val() == auth.uid)",
         }
       },
 
@@ -87,13 +90,50 @@
 
           // The only thread users can read the thread
           // Anyone can read a public thread
-          ".read": "data.child('users/'+auth.uid).exists() || data.child('details/creator-entity-id').val() == auth.uid || data.child('details/type').val() == 4  || data.child('details/type_v4').val() == 4",
+          ".read": "data.child('users/'+auth.uid).exists() || data.child('details/creator-entity-id').val() == auth.uid || data.child('meta/creator').val() == auth.uid || data.child('meta/type').val() == 4 || data.child('details/type').val() == 4  || data.child('details/type_v4').val() == 4",
 
           "meta": {
 
             // Any user can make a new thread. Only the creator can change the details 
-            ".write": "!data.exists() || (data.child('creator-entity-id').val() == auth.uid)",
+            ".write": "!data.exists() || (data.child('creator').val() == auth.uid)",
             // ".write": true
+
+            "creation-date": {
+              // This can only be set on creation - the time must be the current time
+              ".validate": "newData.val() == now"
+            },
+
+            "name": {
+              ".validate": "newData.val().length < 100"
+            },
+
+            "creator-entity-id": {
+              // A room could be created by the server
+              ".validate": "newData.val() == auth.uid || !newData.exists()"
+            },
+
+            "creator": {
+              // A room could be created by the server
+              ".validate": "newData.val() == auth.uid"
+            },
+
+            "type": {
+              // Legacy type value for backwards compatibility
+              // 0x0 (0) - Group
+              // 0x1 (1) - Public
+              ".validate": "newData.val() == 1 || newData.val() == 2 || newData.val() == 4  || newData.val() == 10"
+            },
+
+            "type_v4": {
+              // Can only be set on thread creation must be
+              // 0x1 (1) - Group
+              // 0x2 (2) - 1to1
+              // 0x4 (4) - Public
+              // 0x8 (8) - Snap
+              // 0x16 (22) -
+              // 0x32 (50) -
+              ".validate": "!newData.exists() || newData.val() == 1 || newData.val() == 2 || newData.val() == 4 || newData.val() == 10"
+            }
 
           },
             
@@ -165,12 +205,15 @@
             
             // Allow the client to update the thread if they are a member
             // or if it's a public thread
-            ".write": "!data.exists() || data.parent().parent().parent().child('users/' + auth.uid).exists()|| data.parent().child('details/type').val() == 1  || data.parent().child('details/type_v4').val() == 4",
+            ".write": "!data.exists() || data.parent().parent().parent().child('users/' + auth.uid).exists()|| data.parent().child('details/type').val() == 4  || data.parent().child('details/type_v4').val() == 4 || data.parent().child('meta/type').val() == 4",
               
             "details": {
               ".validate": "newData.val() == now"
             },
             "messages": {
+              ".validate": "newData.val() == now"
+            },
+            "meta": {
               ".validate": "newData.val() == now"
             },
             "users": {
@@ -188,7 +231,7 @@
               // Any user can make a new message
               // Only the sender can modify a message
               // Make sure that if this is a private thread that the user isn't blocked
-              ".write": "data.parent().parent().child('users/' + auth.uid).exists() && (!data.exists() || data.child('user-firebase-id').val() == auth.uid)",
+              ".write": "data.parent().parent().child('users/' + auth.uid).exists() && (!data.exists() || data.child('user-firebase-id').val() == auth.uid || data.child('from').val() == auth.uid)",
                 
               "date": {
                 // Must be current time
@@ -259,7 +302,7 @@
 
               // Members can add users and the creator can too
               // Any user can remove themself
-              ".write": "data.parent().parent().child('users/' + auth.uid).exists() || data.parent().parent().child('details/creator-entity-id').val() == auth.uid || $user_id == auth.uid",
+              ".write": "data.parent().parent().child('users/' + auth.uid).exists() || data.parent().parent().child('details/creator-entity-id').val() == auth.uid || data.parent().parent().child('meta/creator').val() == auth.uid || $user_id == auth.uid",
                 
                // Add this back in - this is removed because it will prevent us from
                // creating a thread with a user who doesn't exist. This is a problem
@@ -268,7 +311,7 @@
               
                 "status": {
                 // Only the thread creator can be the owner
-                ".validate": "(newData.val() == 'owner' && data.parent().parent().parent().child('details/creator-entity-id').val() == $user_id) || newData.val() == 'member'"
+                ".validate": "(newData.val() == 'owner' && (data.parent().parent().parent().child('details/creator-entity-id').val() == $user_id || data.parent().parent().parent().child('meta/creator').val() == $user_id)) || newData.val() == 'member'"
               }
             }
           }
@@ -277,7 +320,7 @@
         
       "users": {
         
-       ".indexOn": ["meta/name", "meta/phone", "meta/email", "meta/location", "meta/country-code, meta/username"],
+       ".indexOn": ["meta/name", "meta/phone", "meta/email", "meta/location", "meta/country-code", "meta/username", "meta/name-lowercase"],
             // ".read": "true",
           ".read": "auth.uid != null",
          
