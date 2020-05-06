@@ -6,7 +6,7 @@
     "source": "functions"
   },
   "database": {
-    "rules": "chat-sdk-rules.json"
+    "rules": "rules.bolt"
   },
   "storage": {
     "rules": "chat-sdk-storage-rules.json"

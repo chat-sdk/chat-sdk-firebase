@@ -2,20 +2,21 @@
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const md5 = require('md5')
 
 const { Logging } = require('@google-cloud/logging');
 const logging = new Logging();
 const log = logging.log('my-custom-log-name');
-
-
 
 admin.initializeApp();
 
 const Sound = "default";
 const iOSAction = "co.chatsdk.QuickReply";
 const blockedUsersEnabled = true;
-const loggingEnabled = false;
+const loggingEnabled = true;
 const reciprocalContactsEnabled = false;
+
+const enableV4Compatibility = true;
 
 function buildContactPushMessage (title, theBody, clickAction, sound, senderId, recipientId) {
 
@@ -68,13 +69,17 @@ function buildMessagePushMessage (title, theBody, clickAction, sound, type, send
 
 function buildMessage (title, body, clickAction, sound, data, recipientId) {
 
-    // Make the user ID safe
-    recipientId = recipientId.split(".").join("1");
-    recipientId = recipientId.split("%2E").join("1");
-    recipientId = recipientId.split("@").join("2");
-    recipientId = recipientId.split("%40").join("2");
-    recipientId = recipientId.split(":").join("3");
-    recipientId = recipientId.split("%3A").join("3");
+    if (enableV4Compatibility) {
+        // Make the user ID safe
+        recipientId = recipientId.split(".").join("1");
+        recipientId = recipientId.split("%2E").join("1");
+        recipientId = recipientId.split("@").join("2");
+        recipientId = recipientId.split("%40").join("2");
+        recipientId = recipientId.split(":").join("3");
+        recipientId = recipientId.split("%3A").join("3");
+    } else {
+        recipientId = md5(recipientId);
+    }
 
     return {
         data: data,
@@ -268,9 +273,12 @@ if (reciprocalContactsEnabled) {
 exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/messages/{messageId}').onCreate((messageSnapshot, context) => {
 
     let messageValue = messageSnapshot.val();
-    let senderId = messageValue["user-firebase-id"];
 
-    let pushRef = admin.database().ref(context.params.rootPath).child("push-test");
+    let senderId = messageValue["from"];
+    
+    if (enableV4Compatibility && !senderId) {
+        senderId = messageValue["user-firebase-id"];
+    }
 
     let threadId = context.params.threadId;
     let rootPath = context.params.rootPath;
@@ -288,14 +296,29 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
                 let userId = IDs[i];
                 promises.push(isBlocked(usersRef, userId, senderId).then(isBlocked => {
                     if (!isBlocked) {
-                        let messageText = messageValue["json_v2"]["text"];
-                        let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId);
-                        logData("Send push: " + messageText + ", to: " + userId);
-                        admin.messaging().send(message).then(success => {
-                            return success;
-                        }).catch(error => {
-                            console.log(error.message);
-                        });
+                        let messageText;
+
+                        let meta = messageValue["meta"];
+                        if (meta) {
+                            messageText = meta["text"];
+                        }
+
+                        if (enableV4Compatibility && !messageText) {
+                            meta = messageValue["json_v2"];
+                            if (meta) {
+                                messageText = meta["text"];
+                            }
+                        }
+
+                        if (messageText) {
+                            let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId);
+                            logData("Send push: " + messageText + ", to: " + userId);
+                            admin.messaging().send(message).then(success => {
+                                return success;
+                            }).catch(error => {
+                                console.log(error.message);
+                            });
+                        }
                     } else {
                         logData("push blocked to: " + userId);
                     }
