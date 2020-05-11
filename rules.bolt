@@ -1,495 +1,609 @@
-{
-  "rules": {
-        
-     // ".read": "true",
-     // ".write": "true",
+// Rules so we can run FireStream on the same database
 
-    "firestream": {
-      "pepe-ios": {
-        ".read": "true",
-        ".write": "true",
-        "users": {
-          "$user_id": {
-            "messages": {
-              ".indexOn": ["from", "date"]
-            }
-          }
-        }
-      },
-      "ui": {
-        ".read": "true",
-        ".write": "true",
-        "users": {
-          "$user_id": {
-            "messages": {
-              ".indexOn": ["from", "date"]
-            }
-          }
-        }
-      }
-    },
-    
-    "$root": {
-      
-      ".validate": "$root == 'pre_1' || $root == 'pre_2' || $root == 'pre_3' || $root == 'live_12_19' || $root == 'web' || $root == 'live_firebase'  || $root == 'live_firestream_realtime'  || $root == 'live_firestream_firestore'", 
-      
-      "firestream": {
-        ".read": "true",
-        ".write": "true",
-        "users": {
-          "$user_id": {
-            "messages": {
-              ".indexOn": ["from", "date"]
-            }
-          }
-        }
-      },
-        
-      // Clients can write a time value indexed by their user ID
-      // The time must be now
-      "time": {
-        "$user_id": {
-          ".read": "auth.uid == $user_id",
-          ".write": "auth.uid == $user_id",
-          ".validate": "newData.val() == now"
-        }
-      },
-        
-      "config": {
-          ".read": "auth != null",
-          ".write": "false",
-      },
+path /firestream {
 
-      // Clients can put themself online but they must write a time with value set to now
-      // Any client can read the client list
-      "online": {
+  path /pepe-ios {
+    read() { true }
+    write() { true }
 
-        ".read": "auth != null",
-        
-        "$user_id": {
- 
-          ".write": "auth.uid == $user_id",
-          "time": {
-            ".validate": "newData.val() == now"
-          },
-          "uid": {
-            ".validate": "auth.uid == $user_id"
-          }
-        }
-      },
-
-      "flagged": {
-        "messages": {
-           "$message_id": {
-
-             // The user who flagged the message can read and write
-              ".read": "!data.exists() || (data.child('creator-entity-id').val() == auth.uid) || (data.child('creator').val() == auth.uid)",
-              ".write":"!data.exists() || (data.child('creator-entity-id').val() == auth.uid) || (data.child('creator').val() == auth.uid)",
-
-             // The message and thread must exist
-              ".validate": "root.child($root + '/threads/' +newData.child('thread').val() +  '/messages/' + $message_id).exists()",
-
-              // Deprecated
-              "sender-entity-id":{
-                ".validate": "root.child($root+'/users/'+newData.val()).exists()"
-              },
-              "from":{
-                ".validate": "root.child($root+'/users/'+newData.val()).exists()"
-              },
-              // Deprecated
-              "creator-enitity-id": {
-                ".validate": "newData.val() == auth.uid"
-              },
-              "creator": {
-                ".validate": "newData.val() == auth.uid"
-              },
-              "date": {
-                ".validate": "newData.val() == now"
-              }
-           }
-        }
-      },
-        
-      "public-threads": {
-        
-        ".read": "auth != null",
-        ".indexOn": "creation-date",
-        
-        "$thread_id": {
-
-
-          // Only the creator could delete a public chat room
-          ".write":"root.child($root+'/users/'+auth.uid).exists() && (!data.exists() || root.child($root + '/threads/' + $thread_id + '/details/creator-entity-id').val() == auth.uid || root.child($root + '/threads/' + $thread_id + '/meta/creator').val() == auth.uid)",
-        }
-      },
-
-      "threads": {
-        "$thread_id": {
-
-          // The only thread users can read the thread
-          // Anyone can read a public thread
-          ".read": "data.child('users/'+auth.uid).exists() || data.child('details/creator-entity-id').val() == auth.uid || data.child('meta/creator').val() == auth.uid || data.child('meta/type').val() == 4 || data.child('details/type').val() == 4  || data.child('details/type_v4').val() == 4",
-
-          "meta": {
-
-            // Any user can make a new thread. Only the creator can change the details 
-            ".write": "!data.exists() || (data.child('creator').val() == auth.uid)",
-            // ".write": true
-
-            "creation-date": {
-              // This can only be set on creation - the time must be the current time
-              ".validate": "newData.val() == now"
-            },
-
-            "name": {
-              ".validate": "newData.val().length < 100"
-            },
-
-            "creator-entity-id": {
-              // A room could be created by the server
-              ".validate": "newData.val() == auth.uid || !newData.exists()"
-            },
-
-            "creator": {
-              // A room could be created by the server
-              ".validate": "newData.val() == auth.uid"
-            },
-
-            "type": {
-              // Legacy type value for backwards compatibility
-              // 0x0 (0) - Group
-              // 0x1 (1) - Public
-              ".validate": "newData.val() == 1 || newData.val() == 2 || newData.val() == 4  || newData.val() == 10"
-            },
-
-            "type_v4": {
-              // Can only be set on thread creation must be
-              // 0x1 (1) - Group
-              // 0x2 (2) - 1to1
-              // 0x4 (4) - Public
-              // 0x8 (8) - Snap
-              // 0x16 (22) -
-              // 0x32 (50) -
-              ".validate": "!newData.exists() || newData.val() == 1 || newData.val() == 2 || newData.val() == 4 || newData.val() == 10"
-            }
-
-          },
-            
-          "details": {
-
-            // Any user can make a new thread. Only the creator can change the details 
-            ".write": "!data.exists() || (data.child('creator-entity-id').val() == auth.uid)",
-
-            "creation-date": {
-              // This can only be set on creation - the time must be the current time
-              ".validate": "newData.val() == now"
-            },
-
-            "name": {
-              ".validate": "newData.val().length < 100"
-            },
-
-            "creator-entity-id": {
-              // A room could be created by the server
-              ".validate": "newData.val() == auth.uid"
-            },
-
-            "creator": {
-              // A room could be created by the server
-              ".validate": "newData.val() == auth.uid"
-            },
-
-            "type": {
-              // Legacy type value for backwards compatibility
-              // 0x0 (0) - Group
-              // 0x1 (1) - Public
-              ".validate": "newData.val() == 1 || newData.val() == 2 || newData.val() == 4  || newData.val() == 10"
-            },
-
-            "type_v4": {
-              // Can only be set on thread creation must be
-              // 0x1 (1) - Group
-              // 0x2 (2) - 1to1
-              // 0x4 (4) - Public
-              // 0x8 (8) - Snap
-              // 0x16 (22) -
-              // 0x32 (50) -
-              ".validate": "newData.val() == 1 || newData.val() == 2 || newData.val() == 4 || newData.val() == 10"
-            }
-          },
-            
-          "permissions": {
-            "$user_id": {
-              ".write": "(!data.exists() && (data.parent().parent().child('creator').val() == auth.uid || data.parent().parent().child('creator-entity-id').val() == auth.uid)) || ($user_id == auth.uid && newData.val() == 'none') || data.parent().child(auth.uid).val() == 'owner' || data.parent().child(auth.uid).val() == 'admin' || data.parent().child(auth.uid).val() == 'moderator'",
-              
-              ".validate": "(!data.exists() && (data.parent().parent().child('creator').val() == auth.uid || data.parent().parent().child('creator-entity-id').val() == auth.uid)) || (newData.val() == 'admin' && data.parent().child(auth.uid).val() == 'owner') || (newData.val() == 'moderator' && (data.parent().child(auth.uid).val() == 'owner' || data.parent().child(auth.uid).val() == 'admin')) || ((newData.val() == 'member' || newData.val() == 'watcher' || newData.val() == 'banned') && (data.parent().child(auth.uid).val() == 'owner' || data.parent().child(auth.uid).val() == 'admin' || data.parent().child(auth.uid).val() == 'moderator'))"
-            }
-          }, 
-
-          "lastMessage": {
-            
-            ".write": "!data.exists() || data.parent().parent().parent().child('users/' + auth.uid).exists()",
-
-            "type": {
-              // Can only be set on message creation must be 0 - 7
-              ".validate": "newData.val() >= 0"
-             },
-
-             // It should be the same as the last message
-             // "JSON": {
-             //   ".validate": "newData.val() == data.parent().parent().child('messages')"
-             // }   
-            
-            // "user-firebase-id": {
-            //   // Can only be set on message creation - a user can only mark a message with their uid
-            //   ".validate": "newData.val() == auth.uid"
-            // }
-
-          },
-
-          "updated": {
-            
-            // Allow the client to update the thread if they are a member
-            // or if it's a public thread
-            ".write": "!data.exists() || data.parent().parent().parent().child('users/' + auth.uid).exists()|| data.parent().child('details/type').val() == 4  || data.parent().child('details/type_v4').val() == 4 || data.parent().child('meta/type').val() == 4",
-              
-            "details": {
-              ".validate": "newData.val() == now"
-            },
-            "messages": {
-              ".validate": "newData.val() == now"
-            },
-            "meta": {
-              ".validate": "newData.val() == now"
-            },
-            "users": {
-              //".validate": "newData.val() == now"
-            }
-          },
-
-          "messages": {
-
-            ".indexOn": ["date"],
-
-              "$message_id": {
-
-              // The user must be in the user list. 
-              // Any user can make a new message
-              // Only the sender can modify a message
-              // Make sure that if this is a private thread that the user isn't blocked
-              ".write": "data.parent().parent().child('users/' + auth.uid).exists() && (!data.exists() || data.child('user-firebase-id').val() == auth.uid || data.child('from').val() == auth.uid)",
-                
-              "date": {
-                // Must be current time
-                ".validate": "newData.val() == now"
-              },
-
-              "type": {
-                // Can only be set on message creation must be 0 - 7
-                ".validate": "!data.exists() && (newData.val() >= 0 && newData.val() <= 20)"
-              },
-
-              // Will be deprecated in favour of the from field
-              "user-firebase-id": {
-                // Can only be set on message creation - a user can only mark a message with their uid
-                ".validate": "!data.exists() && newData.val() == auth.uid"
-              },
-                
-              "to": {
-              	".validate": "!data.exists()"
-              }, 
-
-              "from": {
-                // Can only be set on message creation - a user can only mark a message with their uid
-                ".validate": "!data.exists() && newData.val() == auth.uid"
-              },
-
-              "read": {
-                "$user_id": {
-                  ".write": "auth.uid == $user_id && data.parent().parent().child('users/' + auth.uid).exists()",
-                  "status": {
-                    ".validate": "newData.val() >= 0 && newData.val() <= 2"
-                  },
-                  "date": {
-                    ".validate": "newData.val() == now"
-                  }
-                }
-              }
-            }
-          },
-            
-          "typing": {
-            "$user_id": {
-              ".write": "auth.uid == $user_id && data.parent().parent().child('users/' + auth.uid).exists()"
-            }
-          },
-            
-          "users": {
-
-            // TODO: Implement this
-            // For a user to be added to the thread, they should exist in the users area,
-                          // If this is a public thread, then the user must have an account
-            //              (root.child($root+'/threads/'+$thread_id+'/details/type').val() == 1 &&
-            //                root.child($root+'/users/'+auth.uid).exists()) ||
-                          // If this is a private thread, then only the creator can add a user
-            //              (root.child($root+'/threads/'+$thread_id+'/details/type').val() == 0 &&
-            //                (root.child($root+'/threads/'+$thread_id+'/details/creator-entity-id').val() == auth.uid ||
-            //                root.child($root+'/threads/'+$thread_id+'/users/'+auth.uid).exists()))",
-            // The user must be a member of the thread to see which users exist
-            //".read": "root.child($root+'/threads/'+$thread_id+'/users/'+auth.uid).exists()",
-            // Anyone can add to a public group
-            // To write to a private group you must be the creator or a member
-            //".write": "(root.child($root+'/threads/'+$thread_id+'/details/type').val() == 1 &&
-            //              root.child($root+'/users/'+auth.uid).exists()) ||
-            //           (root.child($root+'/threads/'+$thread_id+'/details/type').val() == 0 &&
-            //              (root.child($root+'/threads/'+$thread_id+'/details/creator-entity-id').val() == auth.uid ||
-            //               root.child($root+'/threads/'+$thread_id+'/users/'+auth.uid).exists()))",
-
-            "$user_id": {
-
-              // Members can add users and the creator can too
-              // Any user can remove themself
-              ".write": "data.parent().parent().child('users/' + auth.uid).exists() || data.parent().parent().child('details/creator-entity-id').val() == auth.uid || data.parent().parent().child('meta/creator').val() == auth.uid || $user_id == auth.uid",
-                
-               // Add this back in - this is removed because it will prevent us from
-               // creating a thread with a user who doesn't exist. This is a problem
-               // for the migration
-              ".validate": "root.child($root+'/users/'+$user_id).exists()",
-              
-                "status": {
-                // Only the thread creator can be the owner
-                ".validate": "(newData.val() == 'owner' && (data.parent().parent().parent().child('details/creator-entity-id').val() == $user_id || data.parent().parent().parent().child('meta/creator').val() == $user_id)) || newData.val() == 'member'"
-              }
-            }
-          }
-        }
-      },
-        
-      "users": {
-        
-       ".indexOn": ["meta/name", "meta/phone", "meta/email", "meta/location", "meta/country-code", "meta/username", "meta/name-lowercase"],
-            // ".read": "true",
-          ".read": "auth.uid != null",
-         
-          "$user_id": {
-
-            // ".read": "$user_id == auth.uid || data.parent().child(auth.uid).exists()",
-            // ".read": "$user_id == auth.uid",
- 
-            "last-online": {
-              ".write": "auth.uid == $user_id",
-  		        ".read": "auth.uid != null",
-              ".validate": "newData.val() == now",
-            },
-            
-            "meta": {
-              ".write": "auth.uid == $user_id",
-  		        ".read": "auth.uid != null",
-		        },
-              
-            "contacts": {
-              ".write": "$user_id == auth.uid",
-              ".read": "$user_id == auth.uid",
-		        },
-              
-            "blocked": {
-              "$blocked_user_id": {
-                ".write": "$user_id == auth.uid",
-                ".read": "$user_id == auth.uid",
-                ".validate": "data.parent().parent().parent().child($blocked_user_id).exists()"
-              }
-            },
-            
-            "online": {
-              ".write": "auth.uid == $user_id",
-  		        ".read": "auth.uid != null",
-              ".validate": "newData.val() == true || newData.val() == false"
-            },
-            
-            "updated": {
-              "meta": {
-                ".write": "data.parent().parent().parent().child(auth.uid).exists()",
-                ".read": "true",
-                ".validate": "newData.val() == now"
-              }, 
-              "threads": {
-                ".write": "data.parent().parent().parent().child(auth.uid).exists()",
-                ".read": "true",
-                ".validate": "newData.val() == now"
-              }, 
-              "contacts": {
-                ".write": "data.parent().parent().parent().child(auth.uid).exists()",
-                ".read": "true",
-                ".validate": "newData.val() == now"
-              },
-              "blocked": {
-                ".write": "data.parent().parent().parent().child(auth.uid).exists()",
-                ".read": "true",
-                ".validate": "newData.val() == now"
-              } 
-
-            },
-            
-              "threads": {
-             
-                "$thread_id": {
-
-                  // The writing user should have a user profile
-                  ".write": "root.child($root+'/users/'+auth.uid).exists()",
-               
-                  // The thread sholud exist
-                  ".validate": "root.child($root+'/threads/'+$thread_id).exists()"
-
-             }
-          }
-        }
-      },
-        
-      "searchIndex": {
-        // Any authenticated user can read the data
-        ".read": "root.child($root+'/users/'+auth.uid).exists()",
-        // Index the items to improve search performance
-        ".indexOn": ["name", "email", "phone", "name-lowercase"],
-        "$user_id": {
-          // We can only write to the index related to our user
-          ".write": "$user_id == auth.uid",
-        }
-      },
-        
-      // GeoFire Rules or location based chat
-      "location": {
-      // Allow anyone to read the GeoFire index
-      ".read": true,
-      // Index each location's geohash for faster querying
-      ".indexOn": ["g"],
-      // Schema validation
-      "$key": {
-        // Allow anyone to add, update, or remove keys in the GeoFire index
-        ".write": true,
-        // Key validation
-        ".validate": "newData.hasChildren(['g', 'l']) && newData.getPriority().length <= 22 && newData.getPriority().length > 0",
-        // Geohash validation
-        "g": {
-          ".validate": "newData.val() == newData.parent().getPriority()"
-        },
-        // Location coordinates validation
-        "l": {
-          "0" : {
-            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
-          },
-          "1" : {
-            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
-          },
-          "$other": {
-            ".validate": false
-          }
-        },
-        // Don't allow any other keys to be written
-        "$other": {
-          ".validate": false
-        }
-      }
+    path /users/{user_id}/messages {
+      index() { ["from", "date"] }
     }
+
+  }
+
+  path /ui {
+    read() { true }
+    write() { true }
+
+    path /users/{user_id}/messages {
+      index() { ["from", "date"] }
     }
   }
+}
+
+path /dart {
+  read() { true }
+  write() { true }
+}
+
+path /{sandbox} {
+
+  // Control which sandbox paths are allowed
+  validate() {
+    sandbox == "pre_1" ||
+    sandbox == "pre_2" || 
+    sandbox == "pre_3" || 
+    sandbox == "live_12_19" || 
+    sandbox == "web" || 
+    sandbox == "live_firebase" || 
+    sandbox == "live_firestream_realtime" || 
+    sandbox == "live_firestream_firestore"
+  }
+
+  // We may want to run FireStream alongside the Firebase user system
+  path /firestream {
+
+    read() { true }
+    write() { true }
+
+    path /users/{user_id}/messages {
+      index() { ["from", "date"] }
+    }
+
+  }
+
+  path /time/{uid} {
+
+    read() { isCurrentUser(uid) }
+    write() { isCurrentUser(uid) }
+    validate() { isNow(this) }
+  }
+
+  path /config {
+    read() { isAuth() }
+    write() { false }
+  }
+
+  path /online {
+
+    read() { isAuth() }
+
+      path /{uid} {
+
+        path /time {
+          validate() { isNow(this) }
+        }
+
+        path /uid {
+          validate() { isCurrentUser(uid) }
+        }
+      }
+  }
+
+  path /flagged/messages/{mid} is Flag {
+
+    validate() {
+      messageExists(sandbox, this.thread, mid) 
+    }
+
+    path /creator {
+      validate() { userExists(sandbox, this) }
+    }
+
+    path /creator-entity-id {
+      validate() { userExists(sandbox, this) }
+    }
+
+    path /from {
+      validate() { userExists(sandbox, this) }
+    }
+
+    path /thread {
+      validate() { threadExists(sandbox, this.thread) }
+    }
+  }
+
+  path /public-threads {
+
+    index() { ["creation-date"] }
+    read() { currentUserExists(sandbox) }
+
+    path /{tid} {
+
+      // Only the creator could delete a public chat room
+      write() {
+        currentUserExists(sandbox) && (
+          data.val() == null || 
+          isThreadCreator(sandbox, tid, auth.uid)
+        )
+      }
+    }
+  }
+
+  path /threads/{tid} is Thread {
+
+    // Deprecated
+    path /details {
+
+      read() {
+        canReadThread(sandbox, tid)
+      }
+
+      write() { 
+        currentUserExists(sandbox) && (
+          data.val() == null || (
+            threadUserIsAdmin(sandbox, tid, auth.uid)
+          ) 
+        )
+      }
+
+      // Deprecated
+      path /creator-entity-id is String | Null {
+        validate() { this == auth.uid && data.val() == null } 
+      }
+
+      path /creator is String {
+        validate() { this == auth.uid && data.val() == null } 
+      }
+
+      path /creation-date is NowDate {
+        validate() { data.val() == null } 
+      }
+
+      path /name is Name | Null {}
+      path /type is Number {}
+      path /type_v4 is Number | Null {}
+
+      path /{wild} is Any | Null {
+      }
+
+    }
+
+    path /meta {
+
+      read() {
+        canReadThread(sandbox, tid)
+      }
+
+      write() { 
+        currentUserExists(sandbox) && (
+          data.val() == null || (
+            threadUserIsAdmin(sandbox, tid, auth.uid)
+          ) 
+        )
+      }
+
+      // Deprecated
+      path /creator-entity-id is String | Null {
+        validate() { this == auth.uid && data.val() == null } 
+      }
+
+      path /creator is String {
+        validate() { this == auth.uid && data.val() == null } 
+      }
+
+      path /creation-date is NowDate {
+        validate() { data.val() == null } 
+      }
+
+      path /name is Name | Null {}
+      path /type is Number {}
+      path /type_v4 is Number | Null {}
+
+      path /{wild} is Any | Null {}
+    }
+
+    // If a permission for a user is not defined, it is assumed they are a member
+    path /permissions {
+
+      read() {
+        canReadThread(sandbox, tid)
+      }
+
+      write() {
+        (isThreadCreator(sandbox, tid, auth.uid) && data.val() == null) ||
+        threadUserIsAdmin(sandbox, tid, auth.uid) ||
+        threadTypeIsPublicGroup(sandbox, tid)
+      }
+
+      path /{uid} {
+
+        validate() {
+          (this == "owner" || this == "admin" || this == "member" || this == "watcher" || this == "banned") && 
+          threadContainsUser(sandbox, tid, uid) && (
+            (isThreadCreator(sandbox, tid, auth.uid) && auth.uid == uid && this == "owner") ||
+            (this == "admin" && threadUserIsOwner(sandbox, tid, auth.uid)) ||
+            ((this == "member" || this == "watcher" || this == "banned") && threadUserIsAdmin(sandbox, tid, auth.uid))
+          )
+        }
+      }
+    }
+
+    // Deprecated
+    path /lastMessage {
+
+      read() {
+        threadUserHasRead(sandbox, tid, auth.uid)
+      }
+
+      write() { threadUserHasVoice(sandbox, tid, auth.uid) }
+    }
+
+    path /update is ThreadUpdate {
+
+      read() {
+        canReadThread(sandbox, tid)
+      }
+
+      write() {
+        (threadTypeIsPublicGroup(sandbox, tid) && threadContainsUser(sandbox, tid, auth.uid)) || threadUserHasVoice(sandbox, tid, auth.uid)
+      }
+    }
+
+    path /messages {
+
+      read() {
+        threadUserHasRead(sandbox, tid, auth.uid)
+      }
+
+      index() { ["date"] }
+
+      path /{mid} is Message {
+
+        write() { 
+          (threadUserHasVoice(sandbox, tid, auth.uid) && (data.val() == null || isMessageSender(sandbox, tid, mid))) || (
+            // Admins can also remove messages
+            threadUserIsAdmin(sandbox, tid, auth.uid)
+          ) || (threadUserHasVoice(sandbox, tid, auth.uid) && this != null) 
+        }
+
+        // Deprecated
+        path /user-firebase-id is String {
+          validate() { data.val() == null && (this == auth.uid || this == null) }
+        }
+
+        path /date is NowDate {
+
+        }
+
+        path /from is String {
+          validate() { data.val() == null && (this == auth.uid || this == null) }
+        }
+
+        // This can be empty for public chats
+        path /to is String[] | Null {
+        }
+
+        path /meta/{wild} is Any | Null {
+        }
+
+        path /read/{uid} {
+
+          validate() {
+            auth.uid == uid || data.val() == null
+          }
+
+          path /date is NowDate {}
+
+          path /status is Number {
+            validate() { (this >= 0 && this <= 2) }
+          }
+        }
+      }
+    }
+
+    path /typing {
+
+      read() {
+        threadUserHasRead(sandbox, tid, auth.uid)
+      }
+
+      path /{uid} {
+        write() { 
+          auth.uid == uid && 
+          threadUserHasVoice(sandbox, tid, auth.uid) 
+        }
+      }
+    }
+
+    path /users {
+
+      read() {
+        canReadThread(sandbox, tid)
+      }
+
+      path /{uid} {
+        write() { 
+          // They can edit their own entry but only if they are already a member
+          // Or if they are an admin or higher
+          // Or if they are the thread creator
+          (auth.uid == uid && data.val() != null) || (
+            threadUserIsAdmin(sandbox, tid, auth.uid)
+          ) || isThreadCreator(sandbox, tid, auth.uid)
+        }
+
+        validate() { userExists(sandbox, uid) }
+
+        path /status {
+          validate() {
+            (this == "owner" && isThreadCreator(sandbox, tid, uid)) || (
+              this == "member"
+            )
+          }
+        }
+      }
+    }
+  }
+
+  path /users {
+
+    index() { ["meta/name", "meta/phone", "meta/email", "meta/location", "meta/country-code", "meta/username", "meta/name-lowercase"] }
+
+    read() { isAuth() }
+
+    path /{uid} {
+
+      path /meta {
+        write() { auth.uid == uid }
+
+        path /allow-invites is Boolean {}
+        path /name is Name {}
+        path /name-lowercase is Name {}
+        path /pictureURL is String | Null {}
+        path /uid is String {}
+        path /availability is String {}
+        path /email is String {}
+        path /{wild} is Any | Null {  }
+      } 
+
+      path /online is Boolean {
+        write() { auth.uid == uid }
+      }
+
+      path /updated is UserUpdate {
+        write() { auth.uid == uid }
+      }
+      path /last-online is NowDate {
+        write() { auth.uid == uid }
+        }
+
+      path /contacts/{cid} {
+        write() { auth.uid == uid }
+        validate() { userExists(sandbox, cid) }
+      }
+
+      path /blocked/{bid} {
+        write() { auth.uid == uid }
+        validate() { userExists(sandbox, bid) }
+      }
+
+      path /threads/{tid} {
+        write() { 
+          auth.uid == uid || (
+            currentUserExists(sandbox) && threadExists(sandbox, tid) && threadUserIsAdmin(sandbox, tid, auth.uid)
+          ) 
+        }
+        validate() { threadExists(sandbox, tid) }
+      }
+    }
+  }
+
+  path /location {
+    read() { currentUserExists(sandbox) }
+    index() { ["g"] }
+    path /{key} {
+      write() { currentUserExists(sandbox) }
+      validate() { this.hasChildren(["g", "l"])  /* && newData.getPriority().length <= 22 && newData.getPriority().length > 0 */ }
+      path /g {
+        /* validate() { this == newData.parent().getPriority() } */
+      }
+      path /l {
+        path /0 is Number {
+          validate() { this >= -90 && this <= 90 }
+        }
+        path /1 is Number {
+          validate() { this >= -180 && this <= 180 }
+        }
+        path /{other} {
+          validate() { false }
+        }
+      }
+      path /{other} {
+        validate() { false }
+      }
+    }
+  }
+
+}
+
+//-------------------
+// Types
+//-------------------
+
+type UserUpdate {
+  meta: NowDate,
+  threads: NowDate,
+  contacts: NowDate,
+  blocked: NowDate
+}
+
+type Thread {
+
+  details: Any | Null,
+  meta: Any | Null,
+  updated: Any | Null,
+  users: Any | Null,
+  messages: Any | Null,
+  typing: Any | Null,
+
+}
+
+type ThreadUpdate {
+  details: NowDate,
+  meta: NowDate,
+  messages: NowDate,
+  users: NowDate
+}
+
+type Message {
+
+  date: NowDate,
+  from: String,
+  meta: Any,
+  read: Any | Null,
+  to: Any | Null,
+  type: Number,
+
+  // Deprecated 
+
+  json_v2: Any | Null,
+  "user-firebase-id": String | Null
+
+}
+
+type Flag {
+
+     // The user who flagged the message can read and write
+  read() {
+    data.val() != null || 
+    this.creator == auth.uid || 
+    this["creator-entity-id"] == auth.uid
+  }
+
+  write() {
+    data.val() != null || 
+    this.creator == auth.uid || 
+    this["creator-entity-id"] == auth.uid
+  }
+
+  creator: String,
+
+  // Deprecated
+  "creator-entity-id": String,
+
+  from: String,
+  thread: String,
+
+  date: NowDate
+}
+
+// Extended Types
+
+type NowDate extends Number {
+  validate() { isNow(this) }
+}
+
+type ThreadType extends Number {
+  validate() { data.val() == null && (this == 1 || this == 2 || this == 4) }
+}
+
+type Name extends String {
+  validate() { this.length < 100 }
+}
+
+//-------------------
+// FUNCTIONS
+//-------------------
+
+canReadThread(sandbox, tid) {
+  currentUserExists(sandbox) && (
+    data.val() == null ||
+    threadTypeIsPublicGroup(sandbox, tid) || (
+      threadContainsUser(sandbox, tid, auth.uid)
+    )
+  )
+}
+
+messageExists(sandbox, tid, mid) {
+  prior(root).child(sandbox + "/threads/" + tid + "/messages/" + mid).val() != null
+}
+
+isMessageSender(sandbox, tid, mid) {
+  prior(root).child(sandbox + "/threads/" + tid + "/messages/" + mid + "/from").val() == auth.uid ||
+  prior(root).child(sandbox + "/threads/" + tid + "/messages/" + mid + "/user-firebase-id").val() == auth.uid
+}
+
+threadExists(sandbox, tid) {
+  prior(root).child(sandbox + "/threads/" + tid).val() != null
+}
+
+threadContainsUser(sandbox, tid, uid) {
+  prior(root).child(sandbox + "/threads/" + tid + "/users/" + uid).val() != null
+}
+
+threadUserHasVoice(sandbox, tid, uid) {
+  (threadContainsUser(sandbox, tid, uid) || threadTypeIsPublicGroup(sandbox, tid)) && 
+  !threadUserHasPermission(sandbox, tid, uid, "banned") &&
+  !threadUserHasPermission(sandbox, tid, uid, "watcher") 
+}
+
+threadUserHasRead(sandbox, tid, uid) {
+  (threadContainsUser(sandbox, tid, uid) || threadTypeIsPublicGroup(sandbox, tid)) && !threadUserHasPermission(sandbox, tid, uid, "banned")
+}
+
+threadUserIsAdmin(sandbox, tid, uid) {
+  threadUserIsOwner(sandbox, tid, uid) || 
+  (threadUserHasPermission(sandbox, tid, uid, "admin") && threadContainsUser(sandbox, tid, uid)) 
+
+}
+
+threadUserIsOwner(sandbox, tid, uid) {
+  isThreadCreator(sandbox, tid, uid) || 
+  threadUserHasPermission(sandbox, tid, uid, "owner")
+}
+
+threadUserHasPermission(sandbox, tid, uid, permission) {
+  prior(root).child(sandbox + "/threads/" + tid + "/permissions/" + uid).val() == permission 
+}
+
+userExists(sandbox, uid) {
+  prior(root).child(sandbox + "/users/" + uid).val() != null
+}
+
+currentUserExists(sandbox) {
+  isAuth() && userExists(sandbox, auth.uid)
+}
+
+isThreadCreator(sandbox, tid, uid) {
+  prior(root).child(sandbox + "/threads/" + tid + "/meta/creator").val() == uid ||
+  // Deprecated
+  prior(root).child(sandbox + "/threads/" + tid + "/details/creator-entity-id").val() == uid 
+}
+
+threadTypeIsPublicGroup(sandbox, tid) {
+  threadTypeIs(sandbox, tid, 4)
+} 
+
+threadTypeIsPrivateGroup(sandbox, tid) {
+  threadTypeIs(sandbox, tid, 1)
+} 
+
+threadTypeIsGroup(sandbox, tid) {
+  threadTypeIsPrivateGroup(sandbox, tid) || threadTypeIsPublicGroup(sandbox, tid)
+} 
+
+threadTypeIsPrivate1to1(sandbox, tid) {
+  threadTypeIs(sandbox, tid, 2)
+} 
+
+threadTypeIs(sandbox, tid, type) {
+  prior(root).child(sandbox + "/threads/" + tid + "/meta/type").val() == type ||
+
+  // deprecated
+  prior(root).child(sandbox + "/threads/" + tid + "/meta/type_v4").val() == type ||
+  prior(root).child(sandbox + "/threads/" + tid + "/details/type").val() == type ||
+  prior(root).child(sandbox + "/threads/" + tid + "/details/type_v4").val() == type
+} 
+
+isCurrentUser(uid) {
+  auth != null && auth.uid == uid
+}
+
+isAuth() {
+  auth != null
+}
+
+isNow(this) {
+  this == now
 }

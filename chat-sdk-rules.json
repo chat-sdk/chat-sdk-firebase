@@ -166,8 +166,8 @@
           },
           "lastMessage": {
             ".validate": "true",
-            ".read": "(root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned'))",
-            ".write": "((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher'))"
+            ".read": "((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned'))",
+            ".write": "(((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher'))"
           },
           "update": {
             ".validate": "newData.hasChildren(['details', 'meta', 'messages', 'users'])",
@@ -187,7 +187,7 @@
               ".validate": "false"
             },
             ".read": "((auth != null && root.child($sandbox + '/users/' + auth.uid).val() != null) && ((data.val() == null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) || root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null))",
-            ".write": "(((((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4) && root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null) || ((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')))"
+            ".write": "(((((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4) && root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null) || (((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')))"
           },
           "messages": {
             "$mid": {
@@ -231,20 +231,20 @@
               "$other": {
                 ".validate": "false"
               },
-              ".write": "(((((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')) && (data.val() == null || (root.child($sandbox + '/threads/' + $tid + '/messages/' + $mid + '/from').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/messages/' + $mid + '/user-firebase-id').val() == auth.uid))) || (((root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == auth.uid) || root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'owner') || (root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'admin' && root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null))) || (((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')) && newData.val() != null))"
+              ".write": "((((((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')) && (data.val() == null || (root.child($sandbox + '/threads/' + $tid + '/messages/' + $mid + '/from').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/messages/' + $mid + '/user-firebase-id').val() == auth.uid))) || (((root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == auth.uid) || root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'owner') || (root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'admin' && root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null))) || ((((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')) && newData.val() != null))"
             },
             ".validate": "true",
-            ".read": "(root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned'))",
+            ".read": "((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned'))",
             ".indexOn": [
               "date"
             ]
           },
           "typing": {
             "$uid": {
-              ".write": "(auth.uid == $uid && ((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')))"
+              ".write": "(auth.uid == $uid && (((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned')) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'watcher')))"
             },
             ".validate": "true",
-            ".read": "(root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned'))"
+            ".read": "((root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) && !(root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'banned'))"
           },
           "users": {
             "$uid": {
@@ -377,7 +377,7 @@
           "g"
         ]
       },
-      ".validate": "(((((($sandbox == 'pre_1' || $sandbox == 'pre_2') || $sandbox == 'live_12_19') || $sandbox == 'web') || $sandbox == 'live_firebase') || $sandbox == 'live_firestream_realtime') || $sandbox == 'live_firestream_firestore')"
+      ".validate": "((((((($sandbox == 'pre_1' || $sandbox == 'pre_2') || $sandbox == 'pre_3') || $sandbox == 'live_12_19') || $sandbox == 'web') || $sandbox == 'live_firebase') || $sandbox == 'live_firestream_realtime') || $sandbox == 'live_firestream_firestore')"
     }
   }
 }
