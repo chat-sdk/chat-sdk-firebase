@@ -30,7 +30,7 @@ Now the script is active and push notifications will be set out automatically.
 
 Firebase secures your data by allowing you to write rules to govern who can access the database and what can be written. On the Firebase dashboard click **Database** then the **Rules** tab. 
 
-Copy the contents of the [**rules.json**](https://github.com/chat-sdk/chat-sdk-firebase/blob/master/chat-sdk-rules.json) file into the rules and click publish.
+Copy the contents of the [**chat-sdk-rules.json**](https://github.com/chat-sdk/chat-sdk-firebase/blob/master/chat-sdk-rules.json) file into the rules and click publish.
 
 **OR**
 
@@ -46,6 +46,22 @@ Copy the `chat-sdk-rules.json` file into your project directory then run:
 
 ```
 firebase deploy --only database:rules
+```
+
+#### Bolt
+
+The rules are written in bolt which is a language that makes it easier to write the rules. We include an up-to-date version of the rules in the `chat-sdk-rules.json` file but if you want to update the rules yourself, you should edit the `rules.bolt` file. 
+
+Install [Bolt](https://github.com/FirebaseExtended/bolt/blob/master/docs/guide.md):
+
+```
+npm install --g firebase-bolt
+```
+
+Then run:
+
+```
+firebase-bolt chat-sdk-rules.bolt
 ```
   
 #### Deploy the storage rules

@@ -6,17 +6,17 @@
     "source": "functions"
   },
   "database": {
-    "rules": "rules.bolt"
+    "rules": "chat-sdk-rules.json"
   },
   "storage": {
     "rules": "chat-sdk-storage-rules.json"
-  },
-  "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
   }
+  // "hosting": {
+  //   "public": "public",
+  //   "ignore": [
+  //     "firebase.json",
+  //     "**/.*",
+  //     "**/node_modules/**"
+  //   ]
+  // }
 }

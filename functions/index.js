@@ -276,8 +276,12 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
 
     let senderId = messageValue["from"];
     
-    if (enableV4Compatibility && !senderId) {
+    if (enableV4Compatibility && unORNull(senderId)) {
         senderId = messageValue["user-firebase-id"];
+    }
+
+    if(unORNull(senderId)) {
+        return 0;
     }
 
     let threadId = context.params.threadId;
@@ -299,18 +303,18 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
                         let messageText;
 
                         let meta = messageValue["meta"];
-                        if (meta) {
+                        if (!unORNull(meta)) {
                             messageText = meta["text"];
                         }
 
-                        if (enableV4Compatibility && !messageText) {
+                        if (enableV4Compatibility && unORNull(messageText)) {
                             meta = messageValue["json_v2"];
-                            if (meta) {
+                            if (!unORNull(meta)) {
                                 messageText = meta["text"];
                             }
                         }
 
-                        if (messageText) {
+                        if (!unORNull(messageText)) {
                             let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId);
                             logData("Send push: " + messageText + ", to: " + userId);
                             admin.messaging().send(message).then(success => {
