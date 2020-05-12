@@ -32,6 +32,7 @@ Firebase secures your data by allowing you to write rules to govern who can acce
 
 Copy the contents of the [**chat-sdk-rules.json**](https://github.com/chat-sdk/chat-sdk-firebase/blob/master/chat-sdk-rules.json) file into the rules and click publish.
 
+
 **OR**
 
 Update your `firebase.json` file as follows:

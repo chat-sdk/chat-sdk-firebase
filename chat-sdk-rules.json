@@ -252,7 +252,7 @@
                 ".validate": "((newData.val() == 'owner' && (root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == $uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == $uid)) || newData.val() == 'member')"
               },
               ".validate": "root.child($sandbox + '/users/' + $uid).val() != null",
-              ".write": "(((auth.uid == $uid && data.val() != null) || (((root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == auth.uid) || root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'owner') || (root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'admin' && root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null))) || (root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == auth.uid))"
+              ".write": "((((auth.uid == $uid && data.val() != null) || (auth.uid == $uid && (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4))) || (((root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == auth.uid) || root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'owner') || (root.child($sandbox + '/threads/' + $tid + '/permissions/' + auth.uid).val() == 'admin' && root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null))) || (root.child($sandbox + '/threads/' + $tid + '/meta/creator').val() == auth.uid || root.child($sandbox + '/threads/' + $tid + '/details/creator-entity-id').val() == auth.uid))"
             },
             ".validate": "true",
             ".read": "((auth != null && root.child($sandbox + '/users/' + auth.uid).val() != null) && ((data.val() == null || (((root.child($sandbox + '/threads/' + $tid + '/meta/type').val() == 4 || root.child($sandbox + '/threads/' + $tid + '/meta/type_v4').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type').val() == 4) || root.child($sandbox + '/threads/' + $tid + '/details/type_v4').val() == 4)) || root.child($sandbox + '/threads/' + $tid + '/users/' + auth.uid).val() != null))"
@@ -376,8 +376,7 @@
         ".indexOn": [
           "g"
         ]
-      },
-      ".validate": "((((((($sandbox == 'pre_1' || $sandbox == 'pre_2') || $sandbox == 'pre_3') || $sandbox == 'live_12_19') || $sandbox == 'web') || $sandbox == 'live_firebase') || $sandbox == 'live_firestream_realtime') || $sandbox == 'live_firestream_firestore')"
+      }
     }
   }
 }

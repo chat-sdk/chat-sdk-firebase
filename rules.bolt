@@ -30,6 +30,7 @@ path /dart {
 path /{sandbox} {
 
   // Control which sandbox paths are allowed
+  /*
   validate() {
     sandbox == "pre_1" ||
     sandbox == "pre_2" || 
@@ -40,6 +41,7 @@ path /{sandbox} {
     sandbox == "live_firestream_realtime" || 
     sandbox == "live_firestream_firestore"
   }
+  */
 
   // We may want to run FireStream alongside the Firebase user system
   path /firestream {
@@ -319,6 +321,8 @@ path /{sandbox} {
           // Or if they are an admin or higher
           // Or if they are the thread creator
           (auth.uid == uid && data.val() != null) || (
+            auth.uid == uid && threadTypeIsPublicGroup(sandbox, tid)
+          ) || (
             threadUserIsAdmin(sandbox, tid, auth.uid)
           ) || isThreadCreator(sandbox, tid, auth.uid)
         }
