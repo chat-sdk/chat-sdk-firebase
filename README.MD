@@ -16,14 +16,18 @@ Below is a summary of the steps that are required to setup push using the Fireba
 2. Navigate to the directory in terminal
 3. Run `firebase login` and login using the terminal
 6. Run `firebase init`
-4. Select Database, Firestore, Functions and Storage
+4. Select Database, Functions and Storage
 5. Select "Use an existing project"
 7. Choose the correct app from the list
-8. What file should be used for Database Rules? Enter
-9.  
+8. "What file should be used for Database Rules? (database.rules.json)" `Enter`
+9. "File database.rules.json already exists. Do you want to overwrite..." `N`
+10. Repeat `N` for all files
 8. Choose `JavaScript`
 9. Choose `y` for ESLint
-10. Choose `Y` to install node dependencies
+10. File ... already exists. Overwrite? `N` 
+11. "Do you want to install dependencies with npm now?" `Y`
+12. "What file should be used for Storage Rules? (storage.rules)" `Enter`
+13. "Overwrit `N`
 11. Find the `functions` directory you've just created and add the files: `index.js` and `package.json` from [Github](https://github.com/chat-sdk/chat-sdk-firebase/tree/master/functions) 
 12. Run `npm install`
 13. Make sure the flag `enableV4Compatibility` matches the value used in your project
@@ -71,10 +75,18 @@ firebase-bolt rules.bolt
 ```
 
 This will generate a `rules.json` file which you can add to your project from the Firebase console. 
-  
+
+You can also update your `firebase.json` to:
+
+```
+"database": {
+    "rules": "database.rules.bolt"
+},  
+```
+
 ## Deploy the storage rules
 
-Make sure storage is enabled for your project. On the Firebase dashboard click **Storage** and follow the instructions to enable storage. 
+Make sure storage is enabled for your project. On the Firebase dashboard click **Storage** and follow the instructions to enable storage.
 
 The storage rules are needed to enable image storage and upload for image messages and user profiles. 
 
@@ -82,11 +94,11 @@ Update your `firebase.json` file as follows:
 
 ```
 "storage": {
-	"rules": "chat-sdk-storage-rules.json"
+	"rules": "storage.rules"
 }
 ```
 
-Copy the `chat-sdk-storage-rules.json` file into your project directory then run:
+Run:
 
 ```
 firebase deploy --only storage
