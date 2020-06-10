@@ -21,8 +21,10 @@ Below is a summary of the steps that are required to setup push using the Fireba
 7. Choose `y` for ESLint
 8. Choose `Y` to install node dependencies
 9. Find the `functions` directory you've just created and add the files: `index.js` and `package.json` from [Github](https://github.com/chat-sdk/chat-sdk-firebase/tree/master/functions) 
-11. If you are using the user blocking module ensure that the variable in the script `blockedUsersEnabled` is set to `true` 
-12. Run `firebase deploy` 
+10. Run `npm install`
+11. Make sure the flag `enableV4Compatibility` matches the value used in your project
+12. If you are using the user blocking module ensure that the variable in the script `blockedUsersEnabled` is set to `true` 
+13. Run `firebase deploy` 
 
 Now the script is active and push notifications will be set out automatically. 
 
