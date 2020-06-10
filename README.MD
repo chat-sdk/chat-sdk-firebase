@@ -27,7 +27,7 @@ Below is a summary of the steps that are required to setup push using the Fireba
 10. File ... already exists. Overwrite? `N` 
 11. "Do you want to install dependencies with npm now?" `Y`
 12. "What file should be used for Storage Rules? (storage.rules)" `Enter`
-13. "Overwrit `N`
+13. "Overwrite?" `N`
 11. Find the `functions` directory you've just created and add the files: `index.js` and `package.json` from [Github](https://github.com/chat-sdk/chat-sdk-firebase/tree/master/functions) 
 12. Run `npm install`
 13. Make sure the flag `enableV4Compatibility` matches the value used in your project
@@ -44,15 +44,15 @@ Copy the contents of the [**chat-sdk-rules.json**](https://github.com/chat-sdk/c
 
 **OR**
 
-Update your `firebase.json` file as follows:
+Make sure your `firebase.json` file is follows:
 
 ```
 "database": {
-  "rules": "chat-sdk-rules.json"
+  "rules": "database.rules.json"
 }
 ```
 
-Copy the `chat-sdk-rules.json` file into your project directory then run:
+Run:
 
 ```
 firebase deploy --only database:rules
@@ -71,7 +71,7 @@ npm install --g firebase-bolt
 Then run:
 
 ```
-firebase-bolt rules.bolt
+firebase-bolt database.rules.bolt
 ```
 
 This will generate a `rules.json` file which you can add to your project from the Firebase console. 
