@@ -12,19 +12,23 @@ To handle push notifications, we use [Firebase Cloud Functions](https://firebase
 
 Below is a summary of the steps that are required to setup push using the Firebase Cloud Functions script. For further instructions you can look at the [Firebase Documentation](https://firebase.google.com/docs/functions/get-started). 
 
-1. Run `firebase login` and login using the browser
-2. Make a new directory to store your push functions in. It can be called anything
-3. Navigate to that directory using the terminal
-4. Run `firebase init functions`
-5. Choose the correct app from the list
-6. Choose `JavaScript`
-7. Choose `y` for ESLint
-8. Choose `Y` to install node dependencies
-9. Find the `functions` directory you've just created and add the files: `index.js` and `package.json` from [Github](https://github.com/chat-sdk/chat-sdk-firebase/tree/master/functions) 
-10. Run `npm install`
-11. Make sure the flag `enableV4Compatibility` matches the value used in your project
-12. If you are using the user blocking module ensure that the variable in the script `blockedUsersEnabled` is set to `true` 
-13. Run `firebase deploy` 
+1. Clone this repository to your computer
+2. Navigate to the directory in terminal
+3. Run `firebase login` and login using the terminal
+6. Run `firebase init`
+4. Select Database, Firestore, Functions and Storage
+5. Select "Use an existing project"
+7. Choose the correct app from the list
+8. What file should be used for Database Rules? Enter
+9.  
+8. Choose `JavaScript`
+9. Choose `y` for ESLint
+10. Choose `Y` to install node dependencies
+11. Find the `functions` directory you've just created and add the files: `index.js` and `package.json` from [Github](https://github.com/chat-sdk/chat-sdk-firebase/tree/master/functions) 
+12. Run `npm install`
+13. Make sure the flag `enableV4Compatibility` matches the value used in your project
+14. If you are using the user blocking module ensure that the variable in the script `blockedUsersEnabled` is set to `true` 
+15. Run `firebase deploy` 
 
 Now the script is active and push notifications will be set out automatically. 
 
