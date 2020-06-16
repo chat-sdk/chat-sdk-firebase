@@ -1,41 +1,5 @@
 {
   "rules": {
-    "firestream": {
-      "pepe-ios": {
-        "users": {
-          "$user_id": {
-            "messages": {
-              ".indexOn": [
-                "from",
-                "date"
-              ]
-            }
-          }
-        },
-        ".read": "true",
-        ".write": "true"
-      },
-      "ui": {
-        "users": {
-          "$user_id": {
-            "messages": {
-              ".indexOn": [
-                "from",
-                "date"
-              ]
-            }
-          }
-        },
-        ".read": "true",
-        ".write": "true"
-      },
-      ".validate": "true"
-    },
-    "dart": {
-      ".validate": "true",
-      ".read": "true",
-      ".write": "true"
-    },
     "$sandbox": {
       "firestream": {
         "users": {
@@ -85,9 +49,15 @@
               ".validate": "(root.child($sandbox + '/users/' + newData.val()).val() != null && newData.isString())"
             },
             "thread": {
-              ".validate": "(root.child($sandbox + '/threads/' + newData.child('thread').val()).val() != null && newData.isString())"
+              ".validate": "(root.child($sandbox + '/threads/' + newData.val()).val() != null && newData.isString())"
             },
-            ".validate": "(newData.hasChildren(['creator', 'creator-entity-id', 'from', 'thread', 'date']) && root.child($sandbox + '/threads/' + newData.child('thread').val() + '/messages/' + $mid).val() != null)",
+            ".validate": "(newData.hasChildren(['creator', 'from', 'thread', 'message', 'date']) && root.child($sandbox + '/threads/' + newData.child('thread').val() + '/messages/' + $mid).val() != null)",
+            "sender-entity-id": {
+              ".validate": "newData.isString()"
+            },
+            "message": {
+              ".validate": "true"
+            },
             "date": {
               ".validate": "(newData.isNumber() && newData.val() == now)"
             },

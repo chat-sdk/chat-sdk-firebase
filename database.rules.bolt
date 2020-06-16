@@ -1,47 +1,4 @@
-// Rules so we can run FireStream on the same database
-
-path /firestream {
-
-  path /pepe-ios {
-    read() { true }
-    write() { true }
-
-    path /users/{user_id}/messages {
-      index() { ["from", "date"] }
-    }
-
-  }
-
-  path /ui {
-    read() { true }
-    write() { true }
-
-    path /users/{user_id}/messages {
-      index() { ["from", "date"] }
-    }
-  }
-}
-
-path /dart {
-  read() { true }
-  write() { true }
-}
-
 path /{sandbox} {
-
-  // Control which sandbox paths are allowed
-  /*
-  validate() {
-    sandbox == "pre_1" ||
-    sandbox == "pre_2" || 
-    sandbox == "pre_3" || 
-    sandbox == "live_12_19" || 
-    sandbox == "web" || 
-    sandbox == "live_firebase" || 
-    sandbox == "live_firestream_realtime" || 
-    sandbox == "live_firestream_firestore"
-  }
-  */
 
   // We may want to run FireStream alongside the Firebase user system
   path /firestream {
@@ -102,8 +59,8 @@ path /{sandbox} {
     }
 
     path /thread {
-      validate() { threadExists(sandbox, this.thread) }
-    }
+      validate() { threadExists(sandbox, this) }
+    } 
   }
 
   path /public-threads {
@@ -484,10 +441,12 @@ type Flag {
   creator: String,
 
   // Deprecated
-  "creator-entity-id": String,
+  "creator-entity-id": String | Null,
+  "sender-entity-id": String | Null,
 
   from: String,
   thread: String,
+  message: Any,
 
   date: NowDate
 }
