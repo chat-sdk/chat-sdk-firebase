@@ -231,7 +231,7 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     for(let uid in userIds) {
         if(userIds.hasOwnProperty(uid)) {
             let userName = userIds[uid];
-            let message = buildMessage(userName, body, action, sound, type, senderId, threadId, uid);
+            let message = buildMessagePushMessage(userName, body, action, sound, type, senderId, threadId, uid);
             status[uid] = message;
             admin.messaging().send(message);
         }
