@@ -28,7 +28,7 @@ function buildContactPushMessage (title, theBody, clickAction, sound, senderId, 
 
 }
 
-function buildMessagePushMessage (title, theBody, clickAction, sound, type, senderId, threadId, recipientId) {
+function buildMessagePushMessage(title, theBody, clickAction, sound, type, senderId, threadId, recipientId, encryptedMessage) {
 
     // Make the token payload
     let body = theBody;
@@ -62,6 +62,10 @@ function buildMessagePushMessage (title, theBody, clickAction, sound, type, send
         chat_sdk_push_title: title,
         chat_sdk_push_body: body,
     };
+
+    if(!unORNull(encryptedMessage)) {
+        data["chat_sdk_encrypted_data"] = encryptedMessage;
+    }
 
     return buildMessage(title, body, clickAction, sound, data, recipientId);
 
@@ -212,6 +216,7 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     let type = data.type;
     let senderId = String(data.senderId);
     let threadId = String(data.threadId);
+    let encryptedMessage = String(data.encryptedMessage);
 
     let userIds = data.userIds;
 
@@ -231,7 +236,7 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     for(let uid in userIds) {
         if(userIds.hasOwnProperty(uid)) {
             let userName = userIds[uid];
-            let message = buildMessagePushMessage(userName, body, action, sound, type, senderId, threadId, uid);
+            let message = buildMessagePushMessage(userName, body, action, sound, type, senderId, threadId, uid, encryptedMessage);
             status[uid] = message;
             admin.messaging().send(message);
         }
@@ -314,8 +319,10 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
                             }
                         }
 
+                        let encryptedMessage = meta["encrypted-message"];
+
                         if (!unORNull(messageText)) {
-                            let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId);
+                            let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId, encryptedMessage);
                             logData("Send push: " + messageText + ", to: " + userId);
                             admin.messaging().send(message).then(success => {
                                 return success;
