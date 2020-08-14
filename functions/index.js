@@ -64,7 +64,9 @@ function buildMessagePushMessage(title, theBody, clickAction, sound, type, sende
     };
 
     if(!unORNull(encryptedMessage)) {
-        data["chat_sdk_encrypted_data"] = encryptedMessage;
+        data["chat_sdk_encrypted_message"] = encryptedMessage;
+    } else {
+        logData("Encrypted message is null");
     }
 
     return buildMessage(title, body, clickAction, sound, data, recipientId);
@@ -216,7 +218,8 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     let type = data.type;
     let senderId = String(data.senderId);
     let threadId = String(data.threadId);
-    let encryptedMessage = String(data.encryptedMessage);
+    let encryptedMessage = String(data["encrypted-message"]);
+    let senderName = String(data.senderName);
 
     let userIds = data.userIds;
 
@@ -224,19 +227,23 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
         throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
     }
 
+    if(unORNull(senderName)) {
+        throw new functions.https.HttpsError("invalid-argument", "Sender Name not valid");
+    }
+
     if(unORNull(threadId)) {
-        throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
+        throw new functions.https.HttpsError("invalid-argument", "Thread ID not valid");
     }
 
     if(unORNull(body)) {
-        throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
+        throw new functions.https.HttpsError("invalid-argument", "Body not valid");
     }
 
     var status = {};
     for(let uid in userIds) {
         if(userIds.hasOwnProperty(uid)) {
             let userName = userIds[uid];
-            let message = buildMessagePushMessage(userName, body, action, sound, type, senderId, threadId, uid, encryptedMessage);
+            let message = buildMessagePushMessage(senderName, body, action, sound, type, senderId, threadId, uid, encryptedMessage);
             status[uid] = message;
             admin.messaging().send(message);
         }
