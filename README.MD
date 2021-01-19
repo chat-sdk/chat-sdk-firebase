@@ -40,7 +40,7 @@ Now the script is active and push notifications will be set out automatically.
 
 Firebase secures your data by allowing you to write rules to govern who can access the database and what can be written. On the Firebase dashboard click **Database** then the **Rules** tab. 
 
-Copy the contents of the [**chat-sdk-rules.json**](https://github.com/chat-sdk/chat-sdk-firebase/blob/master/chat-sdk-rules.json) file into the rules and click publish.
+Copy the contents of the [**database.rules.json**](https://github.com/chat-sdk/chat-sdk-firebase/blob/master/database.rules.json) file into the rules and click publish.
 
 **OR**
 
