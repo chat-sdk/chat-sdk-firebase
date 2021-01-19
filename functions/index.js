@@ -89,6 +89,10 @@ function buildMessage (title, body, clickAction, sound, data, recipientId) {
 
     return {
         data: data,
+        // android: {
+        //     priority: "HIGH",
+        //
+        // },
         apns: {
             headers: {
             },
@@ -218,7 +222,13 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     let type = data.type;
     let senderId = String(data.senderId);
     let threadId = String(data.threadId);
-    let encryptedMessage = String(data["encrypted-message"]);
+
+    let encryptedMessage = null;
+
+    if data.hasOwnProperty("encrypted-message") {
+	    encryptedMessage = String(data["encrypted-message"]);
+    }
+
     let senderName = String(data.senderName);
 
     let userIds = data.userIds;
