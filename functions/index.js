@@ -225,8 +225,8 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
 
     let encryptedMessage = null;
 
-    if data.hasOwnProperty("encrypted-message") {
-	    encryptedMessage = String(data["encrypted-message"]);
+    if (data.hasOwnProperty("encrypted-message")) {
+        encryptedMessage = String(data["encrypted-message"]);
     }
 
     let senderName = String(data.senderName);
