@@ -95,6 +95,7 @@ function buildMessage (title, body, clickAction, sound, data, recipientId) {
         // },
         apns: {
             headers: {
+            	"apns-priority":"10"
             },
             payload: {
                 aps: {
@@ -134,7 +135,7 @@ function getUserIds (threadRef, senderId) {
         let usersVal = users.val();
         if (usersVal !== null) {
             for (let userID in usersVal) {
-                if (usersVal.hasOwnProperty(userID)) {
+                if (Object.prototype.hasOwnProperty.call(usersVal, userID)) {
                     logData("UsersVal:" + usersVal);
                     let muted = usersVal[userID]["mute"];
                     logData("Muted:" + muted);
@@ -224,9 +225,9 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     let threadId = String(data.threadId);
 
     let encryptedMessage = null;
-
-    if (data.hasOwnProperty("encrypted-message")) {
-        encryptedMessage = String(data["encrypted-message"]);
+ 
+    if (Object.prototype.hasOwnProperty.call(data, "encrypted-message")) {
+	    encryptedMessage = String(data["encrypted-message"]);
     }
 
     let senderName = String(data.senderName);
@@ -251,7 +252,7 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
 
     var status = {};
     for(let uid in userIds) {
-        if(userIds.hasOwnProperty(uid)) {
+        if(Object.prototype.hasOwnProperty.call(userIds, uid)) {
             let userName = userIds[uid];
             let message = buildMessagePushMessage(senderName, body, action, sound, type, senderId, threadId, uid, encryptedMessage);
             status[uid] = message;
