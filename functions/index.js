@@ -4,10 +4,6 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const md5 = require('md5')
 
-const { Logging } = require('@google-cloud/logging');
-const logging = new Logging();
-const log = logging.log('my-custom-log-name');
-
 admin.initializeApp();
 
 const Sound = "default";
@@ -116,8 +112,7 @@ function buildMessage (title, body, clickAction, sound, data, recipientId) {
 
 function logData (data) {
     if (loggingEnabled) {
-        const entry = log.entry({}, data);
-        log.write(entry);
+    	functions.logger.log(data)
     }
 }
 
@@ -284,7 +279,7 @@ if (reciprocalContactsEnabled) {
                     return admin.messaging().send(message).then(success => {
                         return success;
                     }).catch(error => {
-                        console.log(error.message);
+                        logData(error.message);
                     });
                 });
             });
@@ -345,7 +340,7 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
                             admin.messaging().send(message).then(success => {
                                 return success;
                             }).catch(error => {
-                                console.log(error.message);
+                                logData(error.message);
                             });
                         }
                     } else {
