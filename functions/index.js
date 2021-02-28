@@ -12,7 +12,7 @@ const blockedUsersEnabled = true;
 const loggingEnabled = true;
 const reciprocalContactsEnabled = false;
 
-const enableV4Compatibility = true;
+const enableV4Compatibility = false;
 
 function buildContactPushMessage (title, theBody, clickAction, sound, senderId, recipientId) {
 
