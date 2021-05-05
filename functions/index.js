@@ -12,8 +12,6 @@ const blockedUsersEnabled = true;
 const loggingEnabled = true;
 const reciprocalContactsEnabled = false;
 
-const enableV4Compatibility = false;
-
 function buildContactPushMessage (title, theBody, clickAction, sound, senderId, recipientId) {
 
     let data = {
@@ -71,17 +69,9 @@ function buildMessagePushMessage(title, theBody, clickAction, sound, type, sende
 
 function buildMessage (title, body, clickAction, sound, data, recipientId) {
 
-    if (enableV4Compatibility) {
-        // Make the user ID safe
-        recipientId = recipientId.split(".").join("1");
-        recipientId = recipientId.split("%2E").join("1");
-        recipientId = recipientId.split("@").join("2");
-        recipientId = recipientId.split("%40").join("2");
-        recipientId = recipientId.split(":").join("3");
-        recipientId = recipientId.split("%3A").join("3");
-    } else {
-        recipientId = md5(recipientId);
-    }
+    recipientId = md5(recipientId);
+
+    logData("MD5 ID " + recipientId)
 
     return {
         data: data,
@@ -294,12 +284,9 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
 
     let senderId = messageValue["from"];
     
-    if (enableV4Compatibility && unORNull(senderId)) {
-        senderId = messageValue["user-firebase-id"];
-    }
 
     if(unORNull(senderId)) {
-        return 0;
+        return 0; 
     }
 
     let threadId = context.params.threadId;
@@ -323,13 +310,6 @@ exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/mes
                         let meta = messageValue["meta"];
                         if (!unORNull(meta)) {
                             messageText = meta["text"];
-                        }
-
-                        if (enableV4Compatibility && unORNull(messageText)) {
-                            meta = messageValue["json_v2"];
-                            if (!unORNull(meta)) {
-                                messageText = meta["text"];
-                            }
                         }
 
                         let encryptedMessage = meta["encrypted-message"];
