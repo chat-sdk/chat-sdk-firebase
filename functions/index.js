@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const md5 = require('md5')
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const md5 = require("md5");
 
 admin.initializeApp();
 
@@ -12,14 +12,11 @@ const blockedUsersEnabled = true;
 const loggingEnabled = true;
 const reciprocalContactsEnabled = false;
 
-function buildContactPushMessage (title, theBody, clickAction, sound, senderId, recipientId) {
-
-    let data = {
+function buildContactPushMessage(title, theBody, clickAction, sound, senderId, recipientId) {
+    const data = {
         chat_sdk_contact_entity_id: senderId,
     };
-
     return buildMessage(title, theBody, clickAction, sound, data, recipientId);
-
 }
 
 function buildMessagePushMessage(title, theBody, clickAction, sound, type, senderId, threadId, recipientId, encryptedMessage) {
@@ -27,7 +24,7 @@ function buildMessagePushMessage(title, theBody, clickAction, sound, type, sende
     // Make the token payload
     let body = theBody;
 
-    let messageType = parseInt(type);
+    const messageType = parseInt(type);
     if (messageType === 1) {
         body = "Location";
     }
@@ -50,14 +47,14 @@ function buildMessagePushMessage(title, theBody, clickAction, sound, type, sende
     //     body = "File";
     // }
 
-    let data = {
+    const data = {
         chat_sdk_thread_entity_id: threadId,
         chat_sdk_user_entity_id: senderId,
         chat_sdk_push_title: title,
         chat_sdk_push_body: body,
     };
 
-    if(!unORNull(encryptedMessage)) {
+    if (!unORNull(encryptedMessage)) {
         data["chat_sdk_encrypted_message"] = encryptedMessage;
     } else {
         logData("Encrypted message is null");
@@ -67,11 +64,11 @@ function buildMessagePushMessage(title, theBody, clickAction, sound, type, sende
 
 }
 
-function buildMessage (title, body, clickAction, sound, data, recipientId) {
+function buildMessage(title, body, clickAction, sound, data, recipientId) {
 
     recipientId = md5(recipientId);
 
-    logData("MD5 ID " + recipientId)
+    logData("MD5 ID " + recipientId);
 
     return {
         data: data,
@@ -81,48 +78,48 @@ function buildMessage (title, body, clickAction, sound, data, recipientId) {
         // },
         apns: {
             headers: {
-            	"apns-priority":"10"
+            	"apns-priority":"10",
             },
             payload: {
                 aps: {
                     alert: {
                         title: title,
-                        body: body
+                        body: body,
                     },
                     badge: 1,
                     sound: sound,
                     priority: "high",
                     category: clickAction,
-                }
+                },
             },
         },
         topic: recipientId,
     };
 }
 
-function logData (data) {
+function logData(data) {
     if (loggingEnabled) {
-    	functions.logger.log(data)
+    	functions.logger.log(data);
     }
 }
 
 function getUserName(usersRef, userId) {
-    return getUserMeta(usersRef, userId).then(meta => {
+    return getUserMeta(usersRef, userId).then((meta) => {
         return getUserNameFromMeta(meta);
     });
 }
 
-function getUserIds (threadRef, senderId) {
-    return threadRef.child('users').once('value').then((users) => {
+function getUserIds(threadRef, senderId) {
+    return threadRef.child("users").once("value").then((users) => {
 
-        let IDs = [];
+        const IDs = [];
 
-        let usersVal = users.val();
+        const usersVal = users.val();
         if (usersVal !== null) {
-            for (let userID in usersVal) {
+            for (const userID in usersVal) {
                 if (Object.prototype.hasOwnProperty.call(usersVal, userID)) {
                     logData("UsersVal:" + usersVal);
-                    let muted = usersVal[userID]["mute"];
+                    const muted = usersVal[userID]["mute"];
                     logData("Muted:" + muted);
                     if (userID !== senderId && muted !== true) {
                         IDs.push(userID);
@@ -138,12 +135,12 @@ function getUserIds (threadRef, senderId) {
 }
 
 function unORNull(object) {
-    return object === 'undefined' || object === null || !object;
+    return object === "undefined" || object === null || !object;
 }
 
-function getUserMeta (usersRef, userId) {
-    return usersRef.child(userId).child('meta').once('value').then((meta) => {
-        let metaValue = meta.val();
+function getUserMeta(usersRef, userId) {
+    return usersRef.child(userId).child("meta").once("value").then((meta) => {
+        const metaValue = meta.val();
         if (metaValue !== null) {
             return metaValue;
         }
@@ -151,10 +148,10 @@ function getUserMeta (usersRef, userId) {
     });
 }
 
-function isBlocked (usersRef, recipientId, testId) {
+function isBlocked(usersRef, recipientId, testId) {
     if (blockedUsersEnabled) {
-        return usersRef.child(recipientId).child('blocked').child(testId).once('value').then((blocked) => {
-            let blockedValue = blocked.val();
+        return usersRef.child(recipientId).child("blocked").child(testId).once("value").then((blocked) => {
+            const blockedValue = blocked.val();
             logData("recipient: " + recipientId + ", testId: "+ testId + "val: " + JSON.stringify(blockedValue) + ", send push: " + blockedValue === null);
             return blockedValue !== null;
         });
@@ -163,27 +160,27 @@ function isBlocked (usersRef, recipientId, testId) {
     }
 }
 
-function getBlockedUsers (usersRef, userId) {
-    if (blockedUsersEnabled) {
-        return usersRef.child(userId).child('blocked').once('value').then((blocked) => {
-            let blockedValue = blocked.val();
+// function getBlockedUsers(usersRef, userId) {
+//     if (blockedUsersEnabled) {
+//         return usersRef.child(userId).child("blocked").once("value").then((blocked) => {
+//             let blockedValue = blocked.val();
 
-            // logData("usersRef " + usersRef.toString() + " uid: " + userId + ", val: " + blockedValue);
+//             // logData("usersRef " + usersRef.toString() + " uid: " + userId + ", val: " + blockedValue);
 
-            if (blockedValue !== null) {
-                return blockedValue;
-            }
-            return null;
-        });
-    } else {
-        return Promise.resolve(null);
-    }
-}
+//             if (blockedValue !== null) {
+//                 return blockedValue;
+//             }
+//             return null;
+//         });
+//     } else {
+//         return Promise.resolve(null);
+//     }
+// }
 
-function getUserNameFromMeta (metaValue) {
+function getUserNameFromMeta(metaValue) {
     if (metaValue !== null) {
         let name = metaValue["name"];
-        if(unORNull(name)) {
+        if (unORNull(name)) {
             name = "Unknown";
         }
         return name;
@@ -193,53 +190,53 @@ function getUserNameFromMeta (metaValue) {
 
 exports.pushToChannels = functions.https.onCall((data, context) => {
 
-    let body = data.body;
+    const body = data.body;
 
     let action = data.action;
-    if(!action) {
+    if (!action) {
         action = iOSAction;
     }
 
     let sound = data.sound;
-    if(!sound) {
+    if (!sound) {
         sound = Sound;
     }
 
-    let type = data.type;
-    let senderId = String(data.senderId);
-    let threadId = String(data.threadId);
+    const type = data.type;
+    const senderId = String(data.senderId);
+    const threadId = String(data.threadId);
 
     let encryptedMessage = null;
- 
+
     if (Object.prototype.hasOwnProperty.call(data, "encrypted-message")) {
 	    encryptedMessage = String(data["encrypted-message"]);
     }
 
-    let senderName = String(data.senderName);
+    const senderName = String(data.senderName);
 
-    let userIds = data.userIds;
+    const userIds = data.userIds;
 
-    if(unORNull(senderId)) {
+    if (unORNull(senderId)) {
         throw new functions.https.HttpsError("invalid-argument", "Sender ID not valid");
     }
 
-    if(unORNull(senderName)) {
+    if (unORNull(senderName)) {
         throw new functions.https.HttpsError("invalid-argument", "Sender Name not valid");
     }
 
-    if(unORNull(threadId)) {
+    if (unORNull(threadId)) {
         throw new functions.https.HttpsError("invalid-argument", "Thread ID not valid");
     }
 
-    if(unORNull(body)) {
+    if (unORNull(body)) {
         throw new functions.https.HttpsError("invalid-argument", "Body not valid");
     }
 
-    var status = {};
-    for(let uid in userIds) {
-        if(Object.prototype.hasOwnProperty.call(userIds, uid)) {
-            let userName = userIds[uid];
-            let message = buildMessagePushMessage(senderName, body, action, sound, type, senderId, threadId, uid, encryptedMessage);
+    const status = {};
+    for (const uid in userIds) {
+        if (Object.prototype.hasOwnProperty.call(userIds, uid)) {
+            // const userName = userIds[uid];
+            const message = buildMessagePushMessage(senderName, body, action, sound, type, senderId, threadId, uid, encryptedMessage);
             status[uid] = message;
             admin.messaging().send(message);
         }
@@ -251,9 +248,9 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
 });
 
 if (reciprocalContactsEnabled) {
-    exports.contactListener = functions.database.ref('{rootPath}/users/{userId}/contacts/{contactId}').onCreate((contactSnapshot, context) => {
+    exports.contactListener = functions.database.ref("{rootPath}/users/{userId}/contacts/{contactId}").onCreate((contactSnapshot, context) => {
 
-        const contactVal = contactSnapshot.val();
+        // const contactVal = contactSnapshot.val();
         const userId = context.params.userId;
         const contactId = context.params.contactId;
         const rootPath = context.params.rootPath;
@@ -264,11 +261,11 @@ if (reciprocalContactsEnabled) {
             const usersRef = admin.database().ref(rootPath).child("users");
 
             return ref.set({type: 0}).then(() => {
-                return getUserName(usersRef, userId).then(name => {
-                    let message = buildContactPushMessage(name, "Added you as a contact", iOSAction, Sound, userId, contactId);
-                    return admin.messaging().send(message).then(success => {
+                return getUserName(usersRef, userId).then((name) => {
+                    const message = buildContactPushMessage(name, "Added you as a contact", iOSAction, Sound, userId, contactId);
+                    return admin.messaging().send(message).then((success) => {
                         return success;
-                    }).catch(error => {
+                    }).catch((error) => {
                         logData(error.message);
                     });
                 });
@@ -278,56 +275,57 @@ if (reciprocalContactsEnabled) {
     });
 }
 
-exports.pushListener = functions.database.ref('{rootPath}/threads/{threadId}/messages/{messageId}').onCreate((messageSnapshot, context) => {
+exports.pushListener = functions.database.ref("{rootPath}/threads/{threadId}/messages/{messageId}").onCreate((messageSnapshot, context) => {
 
-    let messageValue = messageSnapshot.val();
+    const messageValue = messageSnapshot.val();
 
-    let senderId = messageValue["from"];
-    
+    const senderId = messageValue["from"];
 
-    if(unORNull(senderId)) {
-        return 0; 
+    if (unORNull(senderId)) {
+        return 0;
     }
 
-    let threadId = context.params.threadId;
-    let rootPath = context.params.rootPath;
+    const threadId = context.params.threadId;
+    const rootPath = context.params.rootPath;
 
-    let threadRef = admin.database().ref(rootPath).child("threads").child(threadId);
-    let usersRef = admin.database().ref(rootPath).child("users");
+    const threadRef = admin.database().ref(rootPath).child("threads").child(threadId);
+    const usersRef = admin.database().ref(rootPath).child("users");
 
-    return getUserMeta(usersRef, senderId).then(meta => {
-        return getUserIds(threadRef, senderId).then(IDs => {
+    return getUserMeta(usersRef, senderId).then((meta) => {
+        return getUserIds(threadRef, senderId).then((IDs) => {
 
             const name = getUserNameFromMeta(meta);
 
             const promises = [];
-            for(let i in IDs) {
-                let userId = IDs[i];
-                promises.push(isBlocked(usersRef, userId, senderId).then(isBlocked => {
-                    if (!isBlocked) {
-                        let messageText;
+            for (const i in IDs) {
+                if (Object.prototype.hasOwnProperty.call(IDs, i)) {
+                    const userId = IDs[i];
+                    promises.push(isBlocked(usersRef, userId, senderId).then((isBlocked) => {
+                        if (!isBlocked) {
+                            let messageText;
 
-                        let meta = messageValue["meta"];
-                        if (!unORNull(meta)) {
-                            messageText = meta["text"];
+                            const meta = messageValue["meta"];
+                            if (!unORNull(meta)) {
+                                messageText = meta["text"];
+                            }
+
+                            const encryptedMessage = meta["encrypted-message"];
+
+                            if (!unORNull(messageText)) {
+                                const message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue["type"], senderId, threadId, userId, encryptedMessage);
+                                logData("Send push: " + messageText + ", to: " + userId);
+                                admin.messaging().send(message).then((success) => {
+                                    return success;
+                                }).catch((error) => {
+                                    logData(error.message);
+                                });
+                            }
+                        } else {
+                            logData("push blocked to: " + userId);
                         }
-
-                        let encryptedMessage = meta["encrypted-message"];
-
-                        if (!unORNull(messageText)) {
-                            let message = buildMessagePushMessage(name, messageText, iOSAction, Sound, messageValue['type'], senderId, threadId, userId, encryptedMessage);
-                            logData("Send push: " + messageText + ", to: " + userId);
-                            admin.messaging().send(message).then(success => {
-                                return success;
-                            }).catch(error => {
-                                logData(error.message);
-                            });
-                        }
-                    } else {
-                        logData("push blocked to: " + userId);
-                    }
-                    return 0;
-                }));
+                        return 0;
+                    }));
+                }
             }
             return Promise.all(promises);
         });
